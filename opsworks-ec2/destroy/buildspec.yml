@@ -4,3 +4,5 @@ phases:
     commands:
       - aws cloudformation delete-stack 
         --stack-name ${PROJECT_DEPLOYMENT_NAME}-deploy
+      - aws cloudformation delete-stack
+        --stack-name ${PROJECT_DEPLOYMENT_NAME}-network
