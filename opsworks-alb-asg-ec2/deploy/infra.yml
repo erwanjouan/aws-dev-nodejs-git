@@ -118,10 +118,8 @@ Resources:
     Properties:
       Name: !Ref ProjectName
       AppSource:
-        #Type: s3
-        #Url: !Sub https://${ProjectDeploymentName}.s3.${AWS::Region}.amazonaws.com/${ProjectVersion}/app.zip
         Type: git
-        Url: !Sub https://github.com/awslabs/opsworks-windows-demo-nodejs.git
+        Url: !Sub https://github.com/erwanjouan/aws-dev-nodejs-git
       StackId: !Ref OpsworkStack
       Type: other
     Type: AWS::OpsWorks::App

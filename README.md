@@ -5,7 +5,7 @@ to get a working project structure working with this cookbook
 https://github.com/aws-samples/opsworks-linux-demo-cookbook-nodejs
 in AWS Opsworks
 
-### no load balancer
+### Classic load balancer only
 
 https://docs.aws.amazon.com/opsworks/latest/userguide/layers-elb.html
 
@@ -13,5 +13,7 @@ https://docs.aws.amazon.com/opsworks/latest/userguide/layers-elb.html
 
 ### Notes
 
-No build phase is required for NodeJS in OpsWorks (deployment package or what so ever).
-Chef checkouts code from Github and installs all required dependencies during deployment. 
+NodeJS in OpsWorks requires no build phase (deployment package or what so ever).
+Chef :
+- checkouts code from Github master branch
+- installs all required dependencies during deployment. 
