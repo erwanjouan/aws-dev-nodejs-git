@@ -1,0 +1,3 @@
+@Library('aws-jenkins-shared@main') _
+
+callAwsCodeBuild('aws-dev-node-js-zip','opsworks-alb-asg-ec2','deploy/buildspec.yml')

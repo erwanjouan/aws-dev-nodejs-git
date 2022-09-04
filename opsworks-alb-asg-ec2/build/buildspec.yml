@@ -1,0 +1,24 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - aws cloudformation deploy
+        --capabilities CAPABILITY_NAMED_IAM
+        --template-file ${DEPLOYMENT_NAME}/build/infra.yml
+        --stack-name ${PROJECT_DEPLOYMENT_NAME}-build
+        --parameter-overrides
+            ProjectDeploymentName=${PROJECT_DEPLOYMENT_NAME}
+  pre_build:
+    commands:
+      - aws --version && docker --version && java --version && mvn --version
+  build:
+    commands:
+      - cd src && npm install && cd ..
+  post_build:
+    commands:
+      - zip -r app.zip src/
+      - aws s3 cp app.zip s3://${PROJECT_DEPLOYMENT_NAME}/latest/app.zip
+      - aws s3 cp app.zip s3://${PROJECT_DEPLOYMENT_NAME}/${CODEBUILD_RESOLVED_SOURCE_VERSION}/app.zip
+cache:
+  paths:
+    - /root/.m2/**/*

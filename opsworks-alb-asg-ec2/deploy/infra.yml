@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  ProjectName:
+    Type: String
+  ProjectDeploymentName:
+    Type: String
+  ProjectVersion:
+    Type: String
+  VPC:
+    Type: String
+  PublicSubnet1:
+    Type: String
+
+Resources:
+
+  ec2Role:
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Description: Opswork EC2 role to download artif and register to stack
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Sid: S3Permission
+                Effect: Allow
+                Action:
+                  - s3:*
+                  - opsworks:RegisterInstance
+                  - opsworks:DeregisterInstance
+                  - opsworks:DescribeInstances
+                Resource: "*"
+            Version: '2012-10-17'
+          PolicyName: s3Policy
+    Type: AWS::IAM::Role
+  
+  InstanceProfile:
+    Properties:
+      Roles:
+      - !Ref ec2Role
+    Type: AWS::IAM::InstanceProfile
+
+  ServiceRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - opsworks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Description: Opswork service role
+      Policies:
+        - PolicyName: opsworkServicePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:GetMetricStatistics
+                  - ec2:*
+                  - ecs:*
+                  - elasticloadbalancing:*
+                  - iam:PassRole
+                  - iam:GetRolePolicy
+                  - iam:ListInstanceProfiles
+                  - iam:ListRoles
+                  - iam:ListUsers
+                  - rds:*
+                  - s3:*
+                Resource: "*"
+    Type: AWS::IAM::Role
+
+  OpsworkStack:
+    Properties:
+      DefaultInstanceProfileArn: !GetAtt InstanceProfile.Arn
+      DefaultSubnetId: !Ref PublicSubnet1
+      Name: !Ref ProjectName
+      ServiceRoleArn: !GetAtt ServiceRole.Arn
+      VpcId: !Ref VPC
+      DefaultOs: Amazon Linux 2
+      ConfigurationManager:
+        Name: Chef
+        Version: 12
+      UseCustomCookbooks: True
+      UseOpsworksSecurityGroups: False # they are not deleted by cloudformation
+      CustomCookbooksSource:
+        Type: s3
+        Url: https://s3.amazonaws.com/opsworks-demo-assets/opsworks-linux-demo-cookbooks-nodejs.tar.gz
+    Type: AWS::OpsWorks::Stack
+
+  OpsWorksLayer:
+    Properties:
+      AutoAssignElasticIps: true
+      AutoAssignPublicIps: true
+      EnableAutoHealing: false
+      Name: !Ref ProjectName
+      Shortname: !Ref ProjectName
+      CustomRecipes:
+        Deploy: 
+          - nodejs_demo::default # this is required to deploy the app
+      CustomSecurityGroupIds:
+        - !GetAtt OpsWorksInstanceSecurityGroup.GroupId
+      StackId: !Ref OpsworkStack
+      Type: custom
+    Type: AWS::OpsWorks::Layer
+
+  OpsWorksApp:
+    Properties:
+      Name: !Ref ProjectName
+      AppSource:
+        #Type: s3
+        #Url: !Sub https://${ProjectDeploymentName}.s3.${AWS::Region}.amazonaws.com/${ProjectVersion}/app.zip
+        Type: git
+        Url: !Sub https://github.com/awslabs/opsworks-windows-demo-nodejs.git
+      StackId: !Ref OpsworkStack
+      Type: other
+    Type: AWS::OpsWorks::App
+
+  OpsWorksInstance:
+    Properties:
+      InstanceType: t2.medium
+      SshKeyName: k2
+      RootDeviceType: ebs
+      LayerIds: [ !Ref OpsWorksLayer ]
+      StackId: !Ref OpsworkStack
+      VirtualizationType: hvm
+    Type: AWS::OpsWorks::Instance
+
+  OpsWorksInstanceSecurityGroup:
+    Properties:
+      GroupDescription: Allows access to EC2 from Internet
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+    Type: AWS::EC2::SecurityGroup
