@@ -1,6 +1,6 @@
 #!/bin/sh
-PROJECT_DEPLOYMENT_NAME=aws-dev-node-js-zip-opsworks-alb-asg-ec2 && \
-PROJECT_NAME=aws-dev-node-js-zip && \
+PROJECT_DEPLOYMENT_NAME=aws-dev-nodejs-git-opsworks-alb-asg-ec2 && \
+PROJECT_NAME=aws-dev-nodejs-git && \
 CODEBUILD_RESOLVED_SOURCE_VERSION=latest && \
 aws cloudformation deploy \
         --capabilities CAPABILITY_NAMED_IAM \
