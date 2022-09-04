@@ -1,3 +1,0 @@
-@Library('aws-jenkins-shared@main') _
-
-callAwsCodeBuild('aws-dev-nodejs-git','opsworks-alb-asg-ec2','build/buildspec.yml')

@@ -1,3 +1,0 @@
-@Library('aws-jenkins-shared@main') _
-
-callAwsCodeBuild('aws-dev-spring-boot-jar','opsworks-alb-asg-ec2','destroy/buildspec.yml')
